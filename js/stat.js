@@ -1,19 +1,27 @@
 'use strict';
 
-var CLOUD_X = 100;
-var CLOUD_Y = 10;
-var CLOUD_WIDTH = 420;
-var CLOUD_HEIGHT = 270;
+var cloud = {
+  X: 100,
+  Y: 10,
+  WIDTH: 420,
+  HEIGHT: 270
+};
 
-var SHADOW_OFFSET = 10;
-var COLUMN_WIDTH = 40;
-var MAX_COLUMN_HEIGHT = 150;
-var GAP = 50;
-var TEXT_GAP = 10;
+var offset = {
+  CAPTION: 20,
+  SHADOW: 10,
+  COLUMN: 50,
+  TEXT: 10
+};
+
+var column = {
+  WIDTH: 40,
+  MAX_HEIGHT: 150
+};
 
 var renderCloud = function (ctx, x, y, color) {
   ctx.fillStyle = color;
-  ctx.fillRect(x, y, CLOUD_WIDTH, CLOUD_HEIGHT);
+  ctx.fillRect(x, y, cloud.WIDTH, cloud.HEIGHT);
 };
 
 var addText = function (ctx, text, x, y) {
@@ -22,32 +30,54 @@ var addText = function (ctx, text, x, y) {
   ctx.fillText(text, x, y);
 };
 
-var createRandomOpacity = function () {
-  return Math.random();
-};
-
-var renderPlayerResultBar = function (ctx, player, x, textY, barY, color) {
-  addText(ctx, player, x, textY);
+var renderPlayerResultBar = function (ctx, x, y, height, color) {
   ctx.fillStyle = color;
-  ctx.fillRect(x, barY, COLUMN_WIDTH, MAX_COLUMN_HEIGHT);
+  ctx.fillRect(x, y, column.WIDTH, height);
 };
 
 window.renderStatistics = function (ctx, names, times) {
-  renderCloud(ctx, CLOUD_X + SHADOW_OFFSET, CLOUD_Y + SHADOW_OFFSET, 'rgba(0, 0, 0, 0.7)');
-  renderCloud(ctx, CLOUD_X, CLOUD_Y, '#fff');
+  renderCloud(ctx,
+      cloud.X + offset.SHADOW,
+      cloud.Y + offset.SHADOW,
+      'rgba(0, 0, 0, 0.7)'
+  );
+  renderCloud(ctx, cloud.X, cloud.Y, '#fff');
 
-  addText(ctx, 'Ура вы победили!', 120, 40);
-  addText(ctx, 'Список результатов:', 120, 60);
+  addText(ctx, 'Ура вы победили!', cloud.X + offset.CAPTION, cloud.Y + offset.CAPTION);
+  addText(ctx, 'Список результатов:', cloud.X + offset.CAPTION, cloud.Y + 2 * offset.CAPTION);
+
+  var maxGameTime = times.reduce(function (a, b) {
+    return Math.max(a, b);
+  });
+
+  maxGameTime = Math.round(maxGameTime);
 
   names.forEach(function (name, index) {
-    renderPlayerResultBar(
+    addText(
         ctx,
         name,
-        CLOUD_X + 2 * TEXT_GAP + index * (COLUMN_WIDTH + GAP),
-        CLOUD_Y + CLOUD_HEIGHT - TEXT_GAP,
-        CLOUD_Y + CLOUD_HEIGHT - MAX_COLUMN_HEIGHT - 4 * TEXT_GAP,
-        name === 'Вы' ? 'rgba(255, 0, 0, 1)' : 'rgba(0, 0, 255, ' + createRandomOpacity() + ')'
+        cloud.X + 2 * offset.TEXT + index * (column.WIDTH + offset.COLUMN),
+        cloud.Y + cloud.HEIGHT - offset.TEXT
     );
+
+    var columnHeight = Math.round(Math.round(times[index]) * column.MAX_HEIGHT / maxGameTime);
+    var columnY = cloud.Y + cloud.HEIGHT - 4 * offset.TEXT - columnHeight;
+
+    renderPlayerResultBar(
+        ctx,
+        cloud.X + 2 * offset.TEXT + index * (column.WIDTH + offset.COLUMN),
+        columnY,
+        columnHeight,
+        name === 'Вы' ? 'rgba(255, 0, 0, 1)' : 'rgba(0, 0, 255, ' + Math.random() + ')'
+    );
+
+    addText(
+        ctx,
+        Math.round(times[index]),
+        cloud.X + 2 * offset.TEXT + index * (column.WIDTH + offset.COLUMN),
+        columnY - offset.TEXT
+    );
+
   });
 
 };
